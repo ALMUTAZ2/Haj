@@ -1,0 +1,142 @@
+  import React, { useState, useEffect } from 'react';
+  import { MapPin, Save, AlertTriangle, X, Settings } from 'lucide-react';
+  import { Button } from "@/components/ui/button";
+  import { Textarea } from "@/components/ui/textarea";
+  import { Alert, AlertDescription } from "@/components/ui/alert";
+  import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+  } from "@/components/ui/dialog";
+
+  const HajjActivityTracker = () => {
+    const [activity, setActivity] = useState('');
+    const [error, setError] = useState('');
+    const [showLocationHelp, setShowLocationHelp] = useState(false);
+    const [locationStatus, setLocationStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
+
+    useEffect(() => {
+      checkLocationPermission();
+    }, []);
+
+    const checkLocationPermission = () => {
+      if (!navigator.geolocation) {
+        setLocationStatus('unavailable');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        () => setLocationStatus('available'),
+        () => setLocationStatus('unavailable')
+      );
+    };
+
+    const handleSave = async () => {
+      if (!activity.trim()) {
+        setError('الرجاء إدخال وصف النشاط');
+        return;
+      }
+
+      try {
+        setError('جاري تحديد موقعك...');
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        
+        // نجاح في تحديد الموقع
+        setError('');
+        console.log('تم تسجيل النشاط:', {
+          activity,
+          location: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        });
+        
+        setActivity('');
+      } catch (err) {
+        setError('تعذر تحديد الموقع');
+        setShowLocationHelp(true);
+      }
+    };
+
+    return (
+      <div className="bg-white min-h-screen" dir="rtl">
+        <header className="border-b">
+          <div className="flex items-center justify-between p-4">
+            <X className="h-6 w-6" />
+            <h1 className="text-lg font-semibold">تطبيق تسجيل نشاط الحج</h1>
+            <button className="w-6">⋮</button>
+          </div>
+        </header>
+
+        <main className="p-4 space-y-6">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-6 w-6" />
+            <h2 className="text-xl font-bold">تسجيل نشاط الحج</h2>
+          </div>
+
+          {locationStatus === 'unavailable' && (
+            <Alert variant="warning" className="mb-4">
+              <Settings className="h-5 w-5" />
+              <AlertDescription className="mr-2">
+                يرجى تفعيل خدمة تحديد الموقع للاستمرار
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Textarea
+            value={activity}
+            onChange={(e) => setActivity(e.target.value)}
+            placeholder="اكتب وصف نشاطك هنا..."
+            className="min-h-[120px] text-right"
+          />
+
+          <Button 
+            onClick={handleSave}
+            className="w-full bg-slate-800 hover:bg-slate-700"
+            disabled={locationStatus === 'unavailable'}
+          >
+            <Save className="ml-2 h-5 w-5" />
+            حفظ في Excel
+          </Button>
+
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDescription className="mr-2">{error}</AlertDescription>
+            </Alert>
+          )}
+        </main>
+
+        <Dialog open={showLocationHelp} onOpenChange={setShowLocationHelp}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>كيفية تفعيل خدمة تحديد الموقع</DialogTitle>
+              <DialogDescription>
+                <div className="space-y-4 mt-4">
+                  <p>لتفعيل خدمة تحديد الموقع، اتبع الخطوات التالية:</p>
+                  <ol className="list-decimal list-inside space-y-2">
+                    <li>افتح إعدادات هاتفك</li>
+                    <li>اذهب إلى "الخصوصية" أو "الأمان والخصوصية"</li>
+                    <li>ابحث عن "خدمات الموقع"</li>
+                    <li>قم بتفعيل خدمات الموقع</li>
+                    <li>اسمح للمتصفح بالوصول إلى موقعك</li>
+                  </ol>
+                  <p>بعد تفعيل خدمة الموقع، حاول حفظ النشاط مرة أخرى.</p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
+
+  export default HajjActivityTracker;
