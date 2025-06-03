@@ -3,75 +3,268 @@
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>تطبيق تسجيل نشاط الحج</title>
+      <title>تطبيق تسجيل رحلتك في الحج</title>
       <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
       <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
       <style>
+          :root {
+              --primary-color: #D4AF37;
+              --secondary-color: #E6C460;
+              --light-color: #FFFFFF;
+              --dark-color: #1A1A1A;
+              --gold-color: #D4AF37;
+              --danger-color: #dc3545;
+          }
+
+          .form-control::placeholder {
+              color: rgba(255, 255, 255, 0.7) !important;
+          }
+
           body {
-              font-family: system-ui, -apple-system, sans-serif;
-              background-color: #f8f9fa;
+              font-family: 'Amiri', system-ui, -apple-system, sans-serif;
+              background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+                          url('https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?w=1200');
+              background-attachment: fixed;
+              background-size: cover;
+              background-position: center;
+              color: var(--light-color);
+              min-height: 100vh;
+              padding: 2rem 0;
           }
-          .activity-card {
-              background: white;
-              border-radius: 8px;
-              padding: 15px;
-              margin-bottom: 15px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              transition: transform 0.2s;
+
+          .container {
+              max-width: 800px;
+              background: rgba(0, 0, 0, 0.2);
+              border-radius: 20px;
+              box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+              padding: 2rem;
+              position: relative;
+              backdrop-filter: blur(8px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
           }
-          .activity-card:hover {
-              transform: translateY(-2px);
+
+          .islamic-header {
+              text-align: center;
+              padding: 2rem 1rem;
+              margin-bottom: 2rem;
+              border-bottom: 2px solid var(--gold-color);
+              position: relative;
+              background: rgba(0, 0, 0, 0.15);
+              border-radius: 15px 15px 0 0;
+              backdrop-filter: blur(4px);
           }
-          .location-text {
-              color: #666;
-              font-size: 0.9em;
+
+          .islamic-header::before,
+          .islamic-header::after {
+              content: "☪";
+              color: var(--gold-color);
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              font-size: 1.5rem;
+          }
+
+          .islamic-header::before { right: 1rem; }
+          .islamic-header::after { left: 1rem; }
+
+          .bismillah {
+              font-size: 2rem;
+              color: var(--gold-color);
+              text-align: center;
+              margin-bottom: 1.5rem;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          }
+
+          .dua-text {
+              color: var(--light-color);
+              font-size: 1.2rem;
+              text-align: center;
+              margin-top: 1rem;
+              line-height: 1.8;
               display: flex;
+              flex-direction: column;
               align-items: center;
-              gap: 5px;
+              gap: 1.5rem;
           }
-          .timestamp {
-              color: #888;
-              font-size: 0.8em;
+
+          .dua-line {
+              text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+              position: relative;
+              padding: 0 1rem;
           }
-          .activities-container {
-              max-height: 400px;
-              overflow-y: auto;
-              padding-right: 5px;
+
+          .dua-line:not(:last-child)::after {
+              content: "❁";
+              position: absolute;
+              bottom: -1.2rem;
+              left: 50%;
+              transform: translateX(-50%);
+              color: var(--gold-color);
+              font-size: 0.8rem;
+              opacity: 0.8;
           }
-          .activities-container::-webkit-scrollbar {
-              width: 5px;
+
+          .activity-card {
+              background: rgba(0, 0, 0, 0.15);
+              border-radius: 15px;
+              padding: 1.5rem;
+              margin-bottom: 1rem;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              transition: transform 0.3s, box-shadow 0.3s;
+              backdrop-filter: blur(4px);
+              position: relative;
           }
-          .activities-container::-webkit-scrollbar-thumb {
-              background-color: #ddd;
-              border-radius: 5px;
+
+          .activity-card:hover {
+              transform: translateY(-3px);
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
           }
-          .loading {
-              display: inline-block;
-              width: 20px;
-              height: 20px;
-              border: 3px solid #f3f3f3;
-              border-top: 3px solid #3498db;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
+
+          .delete-btn {
+              background: rgba(220, 53, 69, 0.15);
+              border: 1px solid rgba(220, 53, 69, 0.3);
+              color: #ff8888;
+              padding: 0.3rem 0.8rem;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              transition: all 0.3s ease;
+              position: absolute;
+              left: 1rem;
+              top: 1rem;
           }
-          @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
+
+          .delete-btn:hover {
+              background: rgba(220, 53, 69, 0.3);
+              color: #ffffff;
+          }
+
+          .dua-modal {
+              display: none;
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: rgba(0, 0, 0, 0.15);
+              backdrop-filter: blur(12px);
+              padding: 2rem;
+              border-radius: 20px;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              z-index: 1000;
+              max-width: 90%;
+              width: 400px;
+              animation: modalFadeIn 0.5s ease-out;
+          }
+
+          .dua-modal-overlay {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0, 0, 0, 0.3);
+              backdrop-filter: blur(4px);
+              z-index: 999;
+              animation: overlayFadeIn 0.5s ease-out;
+          }
+
+          .dua-message {
+              font-size: 1.5rem;
+              color: var(--gold-color);
+              text-align: center;
+              margin-bottom: 1.5rem;
+              line-height: 1.6;
+              font-family: 'Amiri', serif;
+          }
+
+          .dua-icon {
+              text-align: center;
+              font-size: 2.5rem;
+              margin-bottom: 1rem;
+              color: var(--gold-color);
+              text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+          }
+
+          .close-modal {
+              background: rgba(212, 175, 55, 0.2);
+              border: 1px solid var(--gold-color);
+              color: var(--gold-color);
+              padding: 0.5rem 2rem;
+              border-radius: 10px;
+              cursor: pointer;
+              display: block;
+              margin: 0 auto;
+              transition: all 0.3s ease;
+          }
+
+          .close-modal:hover {
+              background: var(--gold-color);
+              color: var(--dark-color);
+          }
+
+          .btn-primary {
+              background-color: var(--gold-color);
+              border-color: var(--gold-color);
+              color: var(--dark-color);
+          }
+
+          .btn-primary:hover {
+              background-color: #C19B2C;
+              border-color: #C19B2C;
+          }
+
+          .form-control {
+              background: rgba(0, 0, 0, 0.15);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              color: var(--light-color);
+              backdrop-filter: blur(4px);
+          }
+
+          .form-control:focus {
+              background: rgba(0, 0, 0, 0.25);
+              border-color: var(--gold-color);
+              color: var(--light-color);
+          }
+
+          @keyframes modalFadeIn {
+              from {
+                  opacity: 0;
+                  transform: translate(-50%, -60%);
+              }
+              to {
+                  opacity: 1;
+                  transform: translate(-50%, -50%);
+              }
+          }
+
+          @keyframes overlayFadeIn {
+              from {
+                  opacity: 0;
+              }
+              to {
+                  opacity: 1;
+              }
           }
       </style>
   </head>
   <body>
-      <div class="container py-4">
-          <header class="border-bottom mb-4">
-              <div class="d-flex justify-content-between align-items-center pb-3">
-                  <button class="btn btn-link">✕</button>
-                  <h1 class="h4 mb-0">تطبيق تسجيل نشاط الحج</h1>
-                  <button class="btn btn-link">⋮</button>
+      <div class="container">
+          <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+          
+          <header class="islamic-header">
+              <h1 class="h3 mb-0">سجل رحلة الحج المبارك</h1>
+              <div class="dua-text">
+                  <span class="dua-line">اللَّهُمَّ اجْعَلْهُ حَجًّا مَبْرُورًا</span>
+                  <span class="dua-line">وَسَعْيًا مَشْكُورًا</span>
+                  <span class="dua-line">وَذَنْبًا مَغْفُورًا</span>
               </div>
           </header>
 
           <div class="mb-4">
-              <h2 class="h5 mb-3">تسجيل نشاط جديد</h2>
+              <h2 class="h5">تسجيل نشاط جديد</h2>
               <textarea 
                   id="activityInput" 
                   class="form-control mb-3" 
@@ -93,13 +286,57 @@
           <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
 
           <div class="mt-4">
-              <h3 class="h5 mb-3">الأنشطة المسجلة</h3>
+              <h3 class="h5">الأنشطة المسجلة</h3>
               <div id="activitiesList" class="activities-container"></div>
           </div>
       </div>
 
+      <!-- النافذة المنبثقة للدعاء -->
+      <div class="dua-modal-overlay" id="duaOverlay"></div>
+      <div class="dua-modal" id="duaModal">
+          <div class="dua-icon">🤲</div>
+          <div class="dua-message" id="duaMessage"></div>
+          <button class="close-modal" onclick="closeDuaModal()">آمين</button>
+      </div>
+
       <script>
           let activities = JSON.parse(localStorage.getItem('hajjActivities') || '[]');
+
+          const duas = [
+              "لا تنساني من دعائك",
+              "ادع لي بالقبول",
+              "دعوة صادقة لا تنساني",
+              "تكفى ادع لي بالخير",
+              "اذكرني بدعوة طيبة",
+              "ادعي لي بالسلام الداخلي",
+              "ادع لي بالعفو و العافيه",
+              "ادع لي بالفردوس الأعلى",
+              "ادعي لوالدي بالصحة و العافية",
+              "و لك بمثل كل مادعيت لي"
+          ];
+
+          function showDuaModal() {
+              const randomDua = duas[Math.floor(Math.random() * duas.length)];
+              document.getElementById('duaMessage').textContent = randomDua;
+              document.getElementById('duaOverlay').style.display = 'block';
+              document.getElementById('duaModal').style.display = 'block';
+              document.body.style.overflow = 'hidden';
+          }
+
+          function closeDuaModal() {
+              document.getElementById('duaOverlay').style.display = 'none';
+              document.getElementById('duaModal').style.display = 'none';
+              document.body.style.overflow = 'auto';
+          }
+
+          function deleteActivity(id) {
+              if (confirm('هل أنت متأكد من حذف هذا النشاط؟')) {
+                  activities = activities.filter(activity => activity.id !== id);
+                  localStorage.setItem('hajjActivities', JSON.stringify(activities));
+                  displayActivities();
+                  showMessage('تم حذف النشاط بنجاح', 'success');
+              }
+          }
 
           function formatDate(date) {
               return new Date(date).toLocaleString('ar-SA', {
@@ -119,25 +356,17 @@
               setTimeout(() => alertElement.classList.add('d-none'), 5000);
           }
 
-          function setLoading(isLoading, buttonId) {
-              const button = document.getElementById(buttonId);
-              if (isLoading) {
-                  button.disabled = true;
-                  button.innerHTML = '<span class="loading"></span> جاري التنفيذ...';
-              } else {
-                  button.disabled = false;
-                  button.innerHTML = buttonId === 'saveButton' ? 'حفظ النشاط' : 'تصدير Excel';
-              }
-          }
-
           function displayActivities() {
               const container = document.getElementById('activitiesList');
               if (activities.length === 0) {
-                  container.innerHTML = '<div class="text-center text-muted">لا توجد أنشطة مسجلة</div>';
+                  container.innerHTML = '<div class="text-center text-muted p-4">لا توجد أنشطة مسجلة</div>';
                   return;
               }
               container.innerHTML = activities.map(activity => `
                   <div class="activity-card">
+                      <button onclick="deleteActivity('${activity.id}')" class="delete-btn">
+                          حذف النشاط
+                      </button>
                       <div class="timestamp mb-2">
                           ${formatDate(activity.timestamp)}
                       </div>
@@ -164,8 +393,6 @@
                   showMessage('الرجاء إدخال وصف النشاط');
                   return;
               }
-
-              setLoading(true, 'saveButton');
 
               try {
                   const position = await new Promise((resolve, reject) => {
@@ -201,11 +428,11 @@
                   document.getElementById('activityInput').value = '';
                   displayActivities();
                   showMessage('تم حفظ النشاط بنجاح', 'success');
+                  
+                  setTimeout(showDuaModal, 1000);
 
               } catch (err) {
                   showMessage('تعذر تحديد الموقع. الرجاء التأكد من تفعيل خدمات الموقع.');
-              } finally {
-                  setLoading(false, 'saveButton');
               }
           }
 
@@ -214,8 +441,6 @@
                   showMessage('لا توجد أنشطة للتصدير');
                   return;
               }
-
-              setLoading(true, 'exportButton');
 
               try {
                   const workbookData = activities.map(activity => ({
@@ -230,27 +455,14 @@
                   const workbook = XLSX.utils.book_new();
                   XLSX.utils.book_append_sheet(workbook, worksheet, 'الأنشطة');
 
-                  // تعديل عرض الأعمدة
-                  const wscols = [
-                      { wch: 25 }, // التاريخ والوقت
-                      { wch: 40 }, // النشاط
-                      { wch: 15 }, // خط العرض
-                      { wch: 15 }, // خط الطول
-                      { wch: 50 }  // العنوان
-                  ];
-                  worksheet['!cols'] = wscols;
-
                   XLSX.writeFile(workbook, `انشطة_الحج_${new Date().toLocaleDateString('ar-SA')}.xlsx`);
                   showMessage('تم تصدير الملف بنجاح', 'success');
               } catch (error) {
                   showMessage('حدث خطأ أثناء تصدير الملف');
-              } finally {
-                  setLoading(false, 'exportButton');
               }
           }
 
-          // عرض الأنشطة عند تحميل الصفحة
           displayActivities();
       </script>
   </body>
-  </html>؛ 
+  </html>
